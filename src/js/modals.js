@@ -35,7 +35,7 @@ app.modal = function (params) {
 
     var modal = $(_modalTemplateTempDiv).children();
 
-    $('body').append(modal[0]);
+    app.root.append(modal[0]);
 
     // Add events on buttons
     modal.find('.modal-button').each(function (index, el) {
@@ -163,7 +163,8 @@ app.hidePreloader = function () {
     app.closeModal('.modal.modal-in');
 };
 app.showIndicator = function () {
-    $('body').append('<div class="preloader-indicator-overlay"></div><div class="preloader-indicator-modal"><span class="preloader preloader-white">' + (app.params.material ? app.params.materialPreloaderHtml : '') + '</span></div>');
+    if ($('.preloader-indicator-overlay').length > 0) return;
+    app.root.append('<div class="preloader-indicator-overlay"></div><div class="preloader-indicator-modal"><span class="preloader preloader-white">' + (app.params.material ? app.params.materialPreloaderHtml : '') + '</span></div>');
 };
 app.hideIndicator = function () {
     $('.preloader-indicator-overlay, .preloader-indicator-modal').remove();
@@ -241,7 +242,7 @@ app.actions = function (target, params) {
         }
         _modalTemplateTempDiv.innerHTML = modalHTML;
         modal = $(_modalTemplateTempDiv).children();
-        $('body').append(modal[0]);
+        app.root.append(modal[0]);
         groupSelector = '.actions-modal-group';
         buttonSelector = '.actions-modal-button';
     }
@@ -275,7 +276,7 @@ app.popover = function (modal, target, removeOnClose) {
         if (_modal.childNodes.length > 0) {
             modal = _modal.childNodes[0];
             if (removeOnClose) modal.classList.add('remove-on-close');
-            $('body').append(modal);
+            app.root.append(modal);
         }
         else return false; //nothing found
     }
@@ -284,7 +285,7 @@ app.popover = function (modal, target, removeOnClose) {
     if (modal.length === 0 || target.length === 0) return false;
     if (modal.parents('body').length === 0) {
         if (removeOnClose) modal.addClass('remove-on-close');
-        $('body').append(modal[0]);
+        app.root.append(modal[0]);
     }
     if (modal.find('.popover-angle').length === 0 && !app.params.material) {
         modal.append('<div class="popover-angle"></div>');
@@ -375,7 +376,7 @@ app.popover = function (modal, target, removeOnClose) {
                             .transform('translate3d(' + diffX + 'px, ' + diffY + 'px,0) scale(' + (modalWidth/targetWidth) + ', ' + (modalHeight/targetHeight) + ')');
                     });
 
-                modal.once('close', function () {
+                modal.once('popover:close', function () {
                     target
                         .removeClass('floating-button-to-popover-in floating-button-to-popover-scale')
                         .addClass('floating-button-to-popover-out')
@@ -384,7 +385,7 @@ app.popover = function (modal, target, removeOnClose) {
                             target.removeClass('floating-button-to-popover-out');
                         });
                 });
-                modal.once('closed', function () {
+                modal.once('popover:closed', function () {
                     modal.removeClass('popover-floating-button');
                 });
             }
@@ -455,7 +456,7 @@ app.popover = function (modal, target, removeOnClose) {
 
     $(window).on('resize', sizePopover);
 
-    modal.on('close', function () {
+    modal.on('popover:close', function () {
         $(window).off('resize', sizePopover);
     });
 
@@ -470,7 +471,7 @@ app.popup = function (modal, removeOnClose) {
         if (_modal.childNodes.length > 0) {
             modal = _modal.childNodes[0];
             if (removeOnClose) modal.classList.add('remove-on-close');
-            $('body').append(modal);
+            app.root.append(modal);
         }
         else return false; //nothing found
     }
@@ -478,7 +479,7 @@ app.popup = function (modal, removeOnClose) {
     if (modal.length === 0) return false;
     if (modal.parents('body').length === 0) {
         if (removeOnClose) modal.addClass('remove-on-close');
-        $('body').append(modal[0]);
+        app.root.append(modal[0]);
     }
     modal.show();
 
@@ -491,7 +492,7 @@ app.pickerModal = function (modal, removeOnClose) {
         modal = $(modal);
         if (modal.length > 0) {
             if (removeOnClose) modal.addClass('remove-on-close');
-            $('body').append(modal[0]);
+            app.root.append(modal[0]);
         }
         else return false; //nothing found
     }
@@ -499,7 +500,7 @@ app.pickerModal = function (modal, removeOnClose) {
     if (modal.length === 0) return false;
     if (modal.parents('body').length === 0) {
         if (removeOnClose) modal.addClass('remove-on-close');
-        $('body').append(modal[0]);
+        app.root.append(modal[0]);
     }
     if ($('.picker-modal.modal-in:not(.modal-out)').length > 0 && !modal.hasClass('modal-in')) {
         app.closeModal('.picker-modal.modal-in:not(.modal-out)');
@@ -523,6 +524,20 @@ app.loginScreen = function (modal) {
 app.openModal = function (modal) {
     modal = $(modal);
     var isModal = modal.hasClass('modal');
+    var isPopover = modal.hasClass('popover');
+    var isPopup = modal.hasClass('popup');
+    var isLoginScreen = modal.hasClass('login-screen');
+    var isPickerModal = modal.hasClass('picker-modal');
+    var isActions = modal.hasClass('actions-modal');
+
+    // Modal Event Prefix
+    var modalType = 'modal';
+    if (isPopover) modalType = 'popover';
+    if (isPopup) modalType = 'popup';
+    if (isLoginScreen) modalType = 'loginscreen';
+    if (isPickerModal) modalType = 'picker';
+    if (isActions) modalType = 'actions';
+
     if ($('.modal.modal-in:not(.modal-out)').length && app.params.modalStack && isModal) {
         app.modalStack.push(function () {
             app.openModal(modal);
@@ -534,13 +549,10 @@ app.openModal = function (modal) {
         return;
     }
     modal.data('f7-modal-shown', true);
-    modal.once('close', function() {
+    modal.once(modalType + ':close', function() {
        modal.removeData('f7-modal-shown');
     });
-    var isPopover = modal.hasClass('popover');
-    var isPopup = modal.hasClass('popup');
-    var isLoginScreen = modal.hasClass('login-screen');
-    var isPickerModal = modal.hasClass('picker-modal');
+
     if (isModal) {
         modal.show();
         modal.css({
@@ -551,17 +563,17 @@ app.openModal = function (modal) {
     var overlay;
     if (!isLoginScreen && !isPickerModal) {
         if ($('.modal-overlay').length === 0 && !isPopup) {
-            $('body').append('<div class="modal-overlay"></div>');
+            app.root.append('<div class="modal-overlay"></div>');
         }
         if ($('.popup-overlay').length === 0 && isPopup) {
-            $('body').append('<div class="popup-overlay"></div>');
+            app.root.append('<div class="popup-overlay"></div>');
         }
         overlay = isPopup ? $('.popup-overlay') : $('.modal-overlay');
     }
     if (app.params.material && isPickerModal) {
         if (modal.hasClass('picker-calendar')) {
             if ($('.picker-modal-overlay').length === 0 && !isPopup) {
-                $('body').append('<div class="picker-modal-overlay"></div>');
+                app.root.append('<div class="picker-modal-overlay"></div>');
             }
             overlay = $('.picker-modal-overlay');
         }
@@ -571,7 +583,7 @@ app.openModal = function (modal) {
     var clientLeft = modal[0].clientLeft;
 
     // Trugger open event
-    modal.trigger('open');
+    modal.trigger('open ' + modalType + ':open');
 
     // Picker modal body class
     if (isPickerModal) {
@@ -584,7 +596,7 @@ app.openModal = function (modal) {
             app.initPageWithCallback(this);
         });
         modal.find('.navbar').each(function () {
-            app.initNavbarWithCallback(this); 
+            app.initNavbarWithCallback(this);
         });
     }
 
@@ -592,8 +604,8 @@ app.openModal = function (modal) {
     if (!isLoginScreen && !isPickerModal) overlay.addClass('modal-overlay-visible');
     if (app.params.material && isPickerModal && overlay) overlay.addClass('modal-overlay-visible');
     modal.removeClass('modal-out').addClass('modal-in').transitionEnd(function (e) {
-        if (modal.hasClass('modal-out')) modal.trigger('closed');
-        else modal.trigger('opened');
+        if (modal.hasClass('modal-out')) modal.trigger('closed ' + modalType + ':closed');
+        else modal.trigger('opened ' + modalType + ':opened');
     });
     return true;
 };
@@ -607,11 +619,23 @@ app.closeModal = function (modal) {
     var isPopup = modal.hasClass('popup');
     var isLoginScreen = modal.hasClass('login-screen');
     var isPickerModal = modal.hasClass('picker-modal');
+    var isActions = modal.hasClass('actions-modal');
+
+    // Modal Event Prefix
+    var modalType = 'modal';
+    if (isPopover) modalType = 'popover';
+    if (isPopup) modalType = 'popup';
+    if (isLoginScreen) modalType = 'loginscreen';
+    if (isPickerModal) modalType = 'picker';
+    if (isActions) modalType = 'actions';
 
     var removeOnClose = modal.hasClass('remove-on-close');
 
+    // For Actions
+    var keepOnClose = modal.hasClass('keep-on-close');
+
     var overlay;
-    
+
     if (isPopup) overlay = $('.popup-overlay');
     else {
         if (isPickerModal && app.params.material) overlay = $('.picker-modal-overlay');
@@ -627,7 +651,7 @@ app.closeModal = function (modal) {
         overlay.removeClass('modal-overlay-visible');
     }
 
-    modal.trigger('close');
+    modal.trigger('close ' + modalType + ':close');
 
     // Picker modal body class
     if (isPickerModal) {
@@ -637,9 +661,9 @@ app.closeModal = function (modal) {
 
     if (!(isPopover && !app.params.material)) {
         modal.removeClass('modal-in').addClass('modal-out').transitionEnd(function (e) {
-            if (modal.hasClass('modal-out')) modal.trigger('closed');
+            if (modal.hasClass('modal-out')) modal.trigger('closed ' + modalType + ':closed');
             else {
-                modal.trigger('opened');
+                modal.trigger('opened ' + modalType + ':opened');
                 if (isPopover) return;
             }
 
@@ -652,7 +676,7 @@ app.closeModal = function (modal) {
                     modal.remove();
                 }
             }
-            else {
+            else if (!keepOnClose) {
                 modal.remove();
             }
         });
@@ -661,7 +685,7 @@ app.closeModal = function (modal) {
         }
     }
     else {
-        modal.removeClass('modal-in modal-out').trigger('closed').hide();
+        modal.removeClass('modal-in modal-out').trigger('closed ' + modalType + ':closed').hide();
         if (removeOnClose) {
             modal.remove();
         }

@@ -124,10 +124,10 @@ app.initPullToRefresh = function (pageContainer) {
                 container.removeClass('pull-up').addClass('pull-down');
             }
             if (!pullStarted) {
-                container.trigger('pullstart');
+                container.trigger('pullstart ptr:pullstart');
                 pullStarted = true;
             }
-            container.trigger('pullmove', {
+            container.trigger('pullmove ptr:pullmove', {
                 event: e,
                 scrollTop: scrollTop,
                 translate: translate,
@@ -157,7 +157,7 @@ app.initPullToRefresh = function (pageContainer) {
         container.transform('');
         if (refresh) {
             container.addClass('refreshing');
-            container.trigger('refresh', {
+            container.trigger('refresh ptr:refresh', {
                 done: function () {
                     app.pullToRefreshDone(container);
                 }
@@ -168,13 +168,14 @@ app.initPullToRefresh = function (pageContainer) {
         }
         isTouched = false;
         isMoved = false;
-        if (pullStarted) container.trigger('pullend');
+        if (pullStarted) container.trigger('pullend ptr:pullend');
     }
 
     // Attach Events
-    eventsTarget.on(app.touchEvents.start, handleTouchStart);
+    var passiveListener = app.touchEvents.start === 'touchstart' && app.support.passiveListener ? {passive: true, capture: false} : false;
+    eventsTarget.on(app.touchEvents.start, handleTouchStart, passiveListener);
     eventsTarget.on(app.touchEvents.move, handleTouchMove);
-    eventsTarget.on(app.touchEvents.end, handleTouchEnd);
+    eventsTarget.on(app.touchEvents.end, handleTouchEnd, passiveListener);
 
     // Detach Events on page remove
     if (page.length === 0) return;
@@ -186,9 +187,9 @@ app.initPullToRefresh = function (pageContainer) {
     eventsTarget[0].f7DestroyPullToRefresh = destroyPullToRefresh;
     function detachEvents() {
         destroyPullToRefresh();
-        page.off('pageBeforeRemove', detachEvents);
+        page.off('page:beforeremove', detachEvents);
     }
-    page.on('pageBeforeRemove', detachEvents);
+    page.on('page:beforeremove', detachEvents);
 
 };
 
@@ -198,7 +199,7 @@ app.pullToRefreshDone = function (container) {
     container.removeClass('refreshing').addClass('transitioning');
     container.transitionEnd(function () {
         container.removeClass('transitioning pull-up pull-down');
-        container.trigger('refreshdone');
+        container.trigger('refreshdone ptr:done');
     });
 };
 app.pullToRefreshTrigger = function (container) {
@@ -206,7 +207,7 @@ app.pullToRefreshTrigger = function (container) {
     if (container.length === 0) container = $('.pull-to-refresh-content');
     if (container.hasClass('refreshing')) return;
     container.addClass('transitioning refreshing');
-    container.trigger('refresh', {
+    container.trigger('refresh ptr:refresh', {
         done: function () {
             app.pullToRefreshDone(container);
         }

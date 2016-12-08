@@ -58,8 +58,12 @@ var View = function (selector, params) {
     // Content cache
     view.contentCache = {};
 
+    // Context cache
+    view.contextCache = {};
+
     // Pages cache
     view.pagesCache = {};
+    view.pageElementsCache = {};
 
     // Store View in element for easy access
     container[0].f7View = view;
@@ -99,7 +103,7 @@ var View = function (selector, params) {
             viewURL = pushStateRoot;
         }
         else {
-            if (viewURL.indexOf(pushStateSeparator) >= 0 && viewURL.indexOf(pushStateSeparator + '#') < 0) viewURL = viewURL.split(pushStateSeparator)[0];
+            if (pushStateSeparator && viewURL.indexOf(pushStateSeparator) >= 0 && viewURL.indexOf(pushStateSeparator + '#') < 0) viewURL = viewURL.split(pushStateSeparator)[0];
         }
 
     }
@@ -257,7 +261,7 @@ var View = function (selector, params) {
         if (view.params.onSwipeBackMove) {
             view.params.onSwipeBackMove(callbackData);
         }
-        container.trigger('swipeBackMove', callbackData);
+        container.trigger('swipeBackMove swipeback:move', callbackData);
 
         // Transform pages
         var activePageTranslate = touchesDiff * inverter;
@@ -389,13 +393,13 @@ var View = function (selector, params) {
             if (view.params.onSwipeBackBeforeChange) {
                 view.params.onSwipeBackBeforeChange(callbackData);
             }
-            container.trigger('swipeBackBeforeChange', callbackData);
+            container.trigger('swipeBackBeforeChange swipeback:beforechange', callbackData);
         }
         else {
             if (view.params.onSwipeBackBeforeReset) {
                 view.params.onSwipeBackBeforeReset(callbackData);
             }
-            container.trigger('swipeBackBeforeReset', callbackData);
+            container.trigger('swipeBackBeforeReset swipeback:beforereset', callbackData);
         }
 
         activePage.transitionEnd(function () {
@@ -418,22 +422,23 @@ var View = function (selector, params) {
                 if (view.params.onSwipeBackAfterChange) {
                     view.params.onSwipeBackAfterChange(callbackData);
                 }
-                container.trigger('swipeBackAfterChange', callbackData);
+                container.trigger('swipeBackAfterChange swipeback:afterchange', callbackData);
             }
             else {
                 if (view.params.onSwipeBackAfterReset) {
                     view.params.onSwipeBackAfterReset(callbackData);
                 }
-                container.trigger('swipeBackAfterReset', callbackData);
+                container.trigger('swipeBackAfterReset swipeback:afterreset', callbackData);
             }
             if (pageShadow && pageShadow.length > 0) pageShadow.remove();
         });
     };
     view.attachEvents = function (detach) {
         var action = detach ? 'off' : 'on';
-        container[action](app.touchEvents.start, view.handleTouchStart);
+        var passiveListener = app.touchEvents.start === 'touchstart' && app.support.passiveListener ? {passive: true, capture: false} : false;
+        container[action](app.touchEvents.start, view.handleTouchStart, passiveListener);
         container[action](app.touchEvents.move, view.handleTouchMove);
-        container[action](app.touchEvents.end, view.handleTouchEnd);
+        container[action](app.touchEvents.end, view.handleTouchEnd, passiveListener);
     };
     view.detachEvents = function () {
         view.attachEvents(true);
@@ -448,13 +453,13 @@ var View = function (selector, params) {
     app.views.push(view);
     if (view.main) app.mainView = view;
 
-    // Router 
+    // Router
     view.router = {
         load: function (options) {
             return app.router.load(view, options);
         },
         back: function (options) {
-            return app.router.back(view, options);  
+            return app.router.back(view, options);
         },
         // Shortcuts
         loadPage: function (options) {

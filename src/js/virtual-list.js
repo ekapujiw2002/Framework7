@@ -40,6 +40,7 @@ var VirtualList = function (listBlock, params) {
         if (app.device.ios && app.device.osVersion.split('.')[0] < 8) {
             updatableScroll = false;
         }
+        vl.params.updatableScroll = updatableScroll;
     }
 
     // Append <ul>
@@ -104,7 +105,7 @@ var VirtualList = function (listBlock, params) {
             }
         }
         else {
-            listHeight = items.length * vl.params.height / vl.params.cols;
+            listHeight = Math.ceil(items.length /  vl.params.cols) * vl.params.height;
             rowsPerScreen = Math.ceil(pageHeight / vl.params.height);
             rowsBefore = vl.params.rowsBefore || rowsPerScreen * 2;
             rowsAfter = vl.params.rowsAfter || rowsPerScreen;
@@ -170,7 +171,12 @@ var VirtualList = function (listBlock, params) {
 
             if (i === fromIndex) vl.currentFromIndex = index;
             if (i === toIndex - 1) vl.currentToIndex = index;
-            if (index === vl.items.length - 1) vl.reachEnd = true;
+            if (vl.filteredItems) {
+                if (vl.items[index] === vl.filteredItems[vl.filteredItems.length - 1]) vl.reachEnd = true;
+            }
+            else {
+                if (index === vl.items.length - 1) vl.reachEnd = true;
+            }
 
             // Find items
             if (vl.domCache[index]) {
@@ -257,9 +263,14 @@ var VirtualList = function (listBlock, params) {
         vl.render();
     };
     // Handle resize event
+    vl._isVisible = function (el) {
+        return !!( el.offsetWidth || el.offsetHeight || el.getClientRects().length );
+    };
     vl.handleResize = function (e) {
-        vl.setListSize();
-        vl.render(true);
+        if (vl._isVisible(vl.listBlock[0])) {
+            vl.setListSize();
+            vl.render(true);
+        }
     };
 
     vl.attachEvents = function (detach) {

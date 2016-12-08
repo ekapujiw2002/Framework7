@@ -30,6 +30,7 @@
                 "src/less/ios/lists.less",
                 "src/less/ios/contacts.less",
                 "src/less/ios/forms.less",
+                "src/less/ios/floating-button.less",
                 "src/less/ios/panels.less",
                 "src/less/ios/lazy-load.less",
                 "src/less/ios/statusbar.less",
@@ -70,6 +71,7 @@
             "src/js/dom7-utils.js",
             "src/js/dom7-ajax.js",
             "src/js/dom7-outro.js",
+            "src/js/animate7.js",
             "src/js/proto-support.js",
             "src/js/proto-device.js",
             "src/js/proto-plugins.js",
@@ -168,7 +170,10 @@
     },
     "infinite-scroll": {
         "js" : ["src/js/infinite-scroll.js"],
-        "less": {},
+        "less": {
+            "ios": ["src/less/ios/infinite-scroll.less"],
+            "material": ["src/less/material/infinite-scroll.less"]
+        },
         "dependencies" : []
     },
     "scroll-toolbars": {

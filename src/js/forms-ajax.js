@@ -6,7 +6,7 @@ $(document).on('submit change', 'form.ajax-submit, form.ajax-submit-onchange', f
     var form = $(this);
     if (e.type === 'change' && !form.hasClass('ajax-submit-onchange')) return;
     if (e.type === 'submit') e.preventDefault();
-    
+
     var method = (form.attr('method') || 'GET').toUpperCase();
     var contentType = form.prop('enctype') || form.attr('enctype');
 
@@ -23,13 +23,13 @@ $(document).on('submit change', 'form.ajax-submit, form.ajax-submit-onchange', f
         contentType: contentType,
         data: data,
         beforeSend: function (xhr) {
-            form.trigger('beforeSubmit', {data:data, xhr: xhr});
+            form.trigger('beforeSubmit form:beforesend', {data:data, xhr: xhr});
         },
         error: function (xhr) {
-            form.trigger('submitError', {data:data, xhr: xhr});  
+            form.trigger('submitError form:error', {data:data, xhr: xhr});
         },
         success: function (data) {
-            form.trigger('submitted', {data: data, xhr: xhr});
+            form.trigger('submitted form:success', {data: data, xhr: xhr});
         }
     });
 });

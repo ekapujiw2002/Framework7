@@ -10,7 +10,7 @@
         path = require('path'),
         uglify = require('gulp-uglify'),
         sourcemaps = require('gulp-sourcemaps'),
-        minifyCSS = require('gulp-minify-css'),
+        cleanCSS = require('gulp-clean-css'),
         tap = require('gulp-tap'),
         concat = require('gulp-concat'),
         jshint = require('gulp-jshint'),
@@ -26,7 +26,7 @@
             custom: {
                 root: 'custom/',
                 styles: 'custom/css/',
-                scripts: 'custom/js/',
+                scripts: 'custom/js/'
             },
             dist: {
                 root: 'dist/',
@@ -38,13 +38,13 @@
                     root: 'kitchen-sink-ios/',
                     css: 'kitchen-sink-ios/css/',
                     jade: 'kitchen-sink-ios/jade/*.jade',
-                    less: 'kitchen-sink-ios/less/*.less',
+                    less: 'kitchen-sink-ios/less/*.less'
                 },
                 material : {
                     root: 'kitchen-sink-material/',
                     css: 'kitchen-sink-material/css/',
                     jade: 'kitchen-sink-material/jade/*.jade',
-                    less: 'kitchen-sink-material/less/*.less',
+                    less: 'kitchen-sink-material/less/*.less'
                 }
             },
             source: {
@@ -111,6 +111,7 @@
                 'src/js/dom7-ajax.js',
                 'src/js/dom7-utils.js',
                 'src/js/dom7-outro.js',
+                'src/js/animate7.js',
                 'src/js/proto-support.js',
                 'src/js/proto-device.js',
                 'src/js/proto-plugins.js',
@@ -119,10 +120,10 @@
                 'src/js/wrap-end.js'
             ],
             modules: require('./modules.json'),
-            pkg: require('./bower.json'),
+            pkg: require('./package.json'),
             banner: [
                 '/**',
-                ' * <%= pkg.name %> <%= pkg.version %>',
+                ' * Framework7 <%= pkg.version %>',
                 ' * <%= pkg.description %>',
                 '<% if(typeof(theme) !== "undefined") {%> * \n * <%= theme %>\n *<% } else { %> * <% } %>',
                 // ' * ',
@@ -132,14 +133,14 @@
                 ' * The iDangero.us',
                 ' * http://www.idangero.us/',
                 ' * ',
-                ' * Licensed under <%= pkg.license.join(" & ") %>',
+                ' * Licensed under <%= pkg.license %>',
                 ' * ',
                 ' * Released on: <%= date.month %> <%= date.day %>, <%= date.year %>',
                 ' */',
                 ''].join('\n'),
             customBanner: [
                 '/**',
-                ' * <%= pkg.name %> <%= pkg.version %> - Custom Build',
+                ' * Framework7 <%= pkg.version %> - Custom Build',
                 ' * <%= pkg.description %>',
                 '<% if(typeof(theme) !== "undefined") {%> * \n * <%= theme %>\n *<% } else { %> * <% } %>',
                 ' * ',
@@ -151,7 +152,7 @@
                 ' * The iDangero.us',
                 ' * http://www.idangero.us/',
                 ' * ',
-                ' * Licensed under <%= pkg.license.join(" & ") %>',
+                ' * Licensed under <%= pkg.license %>',
                 ' * ',
                 ' * Released on: <%= date.month %> <%= date.day %>, <%= date.year %>',
                 ' */',
@@ -160,17 +161,17 @@
                 year: new Date().getFullYear(),
                 month: ('January February March April May June July August September October November December').split(' ')[new Date().getMonth()],
                 day: new Date().getDate()
-            },
+            }
 
         };
-        
+
     function addJSIndent (file, t) {
         var addIndent = '        ';
         var filename = file.path.split('src/js/')[1];
         if (filename === 'wrap-start.js' || filename === 'wrap-end.js') {
             addIndent = '';
         }
-        var add4spaces = ('f7-intro.js f7-outro.js proto-device.js proto-plugins.js proto-support.js dom7-intro.js dom7-outro.js template7.js swiper.js').split(' ');
+        var add4spaces = ('f7-intro.js f7-outro.js proto-device.js proto-plugins.js proto-support.js dom7-intro.js dom7-outro.js animate7.js template7.js swiper.js').split(' ');
         if (add4spaces.indexOf(filename) >= 0) {
             addIndent = '    ';
         }
@@ -207,7 +208,7 @@
             .on('end', function () {
                 cb();
             });
-        
+
     });
     gulp.task('styles-ios', function (cb) {
         var cbs = 0;
@@ -242,7 +243,7 @@
                     if (cbs === 3) cb();
                 });
         });
-            
+
     });
 
     // F7 Demo App
@@ -253,7 +254,7 @@
                 locals: {
                     stylesheetFilename: 'framework7.ios',
                     stylesheetColorsFilename: 'framework7.ios.colors',
-                    scriptFilename: 'framework7',
+                    scriptFilename: 'framework7'
                 }
             }))
             .pipe(gulp.dest(paths.build.root));
@@ -280,6 +281,9 @@
         gulp.src(paths.ks.ios.jade)
             .pipe(jade({
                 pretty: true,
+                data: {
+                    icons: require('./manifest-icons-ios.json').icons
+                }
             }))
             .pipe(gulp.dest(paths.ks.ios.root))
             .pipe(connect.reload())
@@ -305,6 +309,9 @@
         gulp.src(paths.ks.material.jade)
             .pipe(jade({
                 pretty: true,
+                data: {
+                    icons: require('./manifest-icons-material.json').icons
+                }
             }))
             .pipe(gulp.dest(paths.ks.material.root))
             .pipe(connect.reload())
@@ -332,7 +339,7 @@
             var exampleRoot = paths.examples.root + paths.examples.list[i] + '/';
             gulp.src(exampleRoot + 'jade/*.jade')
                 .pipe(jade({
-                    pretty: true,
+                    pretty: true
                 }))
                 .pipe(gulp.dest(exampleRoot));
             gulp.src(exampleRoot + 'less/*.less')
@@ -359,7 +366,7 @@
                         locals: {
                             stylesheetFilename: 'framework7.ios.min',
                             stylesheetColorsFilename: 'framework7.ios.colors.min',
-                            scriptFilename: 'framework7.min',
+                            scriptFilename: 'framework7.min'
                         }
                     }))
                     .pipe(gulp.dest(paths.dist.root));
@@ -376,17 +383,17 @@
 
                 // Minify CSS
                 var minifiedCSS = [
-                    paths.dist.styles + f7.filename + '.ios.css', 
-                    paths.dist.styles + f7.filename + '.ios.rtl.css', 
+                    paths.dist.styles + f7.filename + '.ios.css',
+                    paths.dist.styles + f7.filename + '.ios.rtl.css',
                     paths.dist.styles + f7.filename + '.ios.colors.css',
-                    paths.dist.styles + f7.filename + '.material.css', 
-                    paths.dist.styles + f7.filename + '.material.rtl.css', 
+                    paths.dist.styles + f7.filename + '.material.css',
+                    paths.dist.styles + f7.filename + '.material.rtl.css',
                     paths.dist.styles + f7.filename + '.material.colors.css'
                 ];
                 gulp.src(minifiedCSS)
-                    .pipe(minifyCSS({
+                    .pipe(cleanCSS({
                         advanced: false,
-                        aggressiveMerging: false,
+                        aggressiveMerging: false
                     }))
                     .pipe(header(f7.banner, { pkg : f7.pkg, date: f7.date }))
                     .pipe(rename(function(path) {
@@ -395,7 +402,7 @@
                     .pipe(gulp.dest(paths.dist.styles));
             });
     });
-    
+
     /* =================================
     Custom Build
     ================================= */
@@ -414,16 +421,14 @@
         modulesJs.push.apply(modulesJs, f7.modules.core_intro.js);
         modulesLessIOS.push.apply(modulesLessIOS, f7.modules.core_intro.less.ios);
         modulesLessMaterial.push.apply(modulesLessMaterial, f7.modules.core_intro.less.material);
-        for (i = 0; i < modules.length; i++) {
-            module = f7.modules[modules[i]];
-            if (module.dependencies.length > 0) {
-                modules.push.apply(modules, module.dependencies);
-            }
-        }
+
         for (i = 0; i < modules.length; i++) {
             module = f7.modules[modules[i]];
             if (!(module)) continue;
 
+            if (module.dependencies.length > 0) {
+                modules.push.apply(modules, module.dependencies);
+            }
             if (module.js.length > 0) {
                 modulesJs.push.apply(modulesJs, module.js);
             }
@@ -469,7 +474,7 @@
                 path.basename = path.basename + '.min';
             }))
             .pipe(gulp.dest(paths.custom.scripts));
-        
+
         // CSSes
         [customLessIOS, customLessMaterial].forEach(function (customLessList) {
             var theme = customLessList === customLessIOS ? 'ios' : 'material';
@@ -482,9 +487,9 @@
                 .pipe(header(f7.customBanner, { pkg : f7.pkg, date: f7.date, theme: themeName, modulesList: modules.join(',') } ))
                 .pipe(gulp.dest(paths.custom.styles))
 
-                .pipe(minifyCSS({
+                .pipe(cleanCSS({
                     advanced: false,
-                    aggressiveMerging: false,
+                    aggressiveMerging: false
                 }))
                 .pipe(header(f7.customBanner, { pkg : f7.pkg, date: f7.date, theme: themeName, modulesList: modules.join(',') }))
                 .pipe(rename(function(path) {
@@ -537,7 +542,7 @@
             port:'3000'
         });
     });
-    
+
     gulp.task('open', function () {
         return gulp.src('./index.html').pipe(open({ uri: 'http://localhost:3000/index.html'}));
     });
@@ -545,6 +550,6 @@
     gulp.task('server', [ 'watch', 'connect', 'open' ]);
 
     gulp.task('default', [ 'server' ]);
-    
+
     gulp.task('test', [ 'build' ]);
 })();

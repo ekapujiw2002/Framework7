@@ -263,7 +263,6 @@ var Calendar = function (params) {
                 wrapperHeight = p.wrapper[0].offsetHeight;
                 p.wrapper.transition(0);
             }
-            e.preventDefault();
 
             touchesDiff = p.isH ? touchCurrentX - touchStartX : touchCurrentY - touchStartY;
             percentage = touchesDiff/(p.isH ? wrapperWidth : wrapperHeight);
@@ -344,10 +343,11 @@ var Calendar = function (params) {
         p.container.find('.picker-calendar-prev-year').on('click', p.prevYear);
         p.container.find('.picker-calendar-next-year').on('click', p.nextYear);
         p.wrapper.on('click', handleDayClick);
+        var passiveListener = app.touchEvents.start === 'touchstart' && app.support.passiveListener ? {passive: true, capture: false} : false;
         if (p.params.touchMove) {
-            p.wrapper.on(app.touchEvents.start, handleTouchStart);
+            p.wrapper.on(app.touchEvents.start, handleTouchStart, passiveListener);
             p.wrapper.on(app.touchEvents.move, handleTouchMove);
-            p.wrapper.on(app.touchEvents.end, handleTouchEnd);
+            p.wrapper.on(app.touchEvents.end, handleTouchEnd, passiveListener);
         }
 
         p.container[0].f7DestroyCalendarEvents = function () {
@@ -357,9 +357,9 @@ var Calendar = function (params) {
             p.container.find('.picker-calendar-next-year').off('click', p.nextYear);
             p.wrapper.off('click', handleDayClick);
             if (p.params.touchMove) {
-                p.wrapper.off(app.touchEvents.start, handleTouchStart);
+                p.wrapper.off(app.touchEvents.start, handleTouchStart, passiveListener);
                 p.wrapper.off(app.touchEvents.move, handleTouchMove);
-                p.wrapper.off(app.touchEvents.end, handleTouchEnd);
+                p.wrapper.off(app.touchEvents.end, handleTouchEnd, passiveListener);
             }
         };
 
@@ -904,7 +904,7 @@ var Calendar = function (params) {
                 p.pickerHTML = '<div class="popover popover-picker-calendar"><div class="popover-inner">' + p.pickerHTML + '</div></div>';
                 p.popover = app.popover(p.pickerHTML, p.params.input, true);
                 p.container = $(p.popover).find('.picker-modal');
-                $(p.popover).on('close', function () {
+                $(p.popover).on('popover:close', function () {
                     onPickerClose();
                 });
             }
@@ -916,7 +916,7 @@ var Calendar = function (params) {
             else {
                 p.container = $(app.pickerModal(p.pickerHTML));
                 $(p.container)
-                .on('close', function () {
+                .on('picker:close', function () {
                     onPickerClose();
                 });
             }

@@ -6,10 +6,10 @@ app.sortableToggle = function (sortableContainer) {
     if (sortableContainer.length === 0) sortableContainer = $('.list-block.sortable');
     sortableContainer.toggleClass('sortable-opened');
     if (sortableContainer.hasClass('sortable-opened')) {
-        sortableContainer.trigger('open');
+        sortableContainer.trigger('open sortable:open');
     }
     else {
-        sortableContainer.trigger('close');
+        sortableContainer.trigger('close sortable:close');
     }
     return sortableContainer;
 };
@@ -17,18 +17,18 @@ app.sortableOpen = function (sortableContainer) {
     sortableContainer = $(sortableContainer);
     if (sortableContainer.length === 0) sortableContainer = $('.list-block.sortable');
     sortableContainer.addClass('sortable-opened');
-    sortableContainer.trigger('open');
+    sortableContainer.trigger('open sortable:open');
     return sortableContainer;
 };
 app.sortableClose = function (sortableContainer) {
     sortableContainer = $(sortableContainer);
     if (sortableContainer.length === 0) sortableContainer = $('.list-block.sortable');
     sortableContainer.removeClass('sortable-opened');
-    sortableContainer.trigger('close');
+    sortableContainer.trigger('close sortable:close');
     return sortableContainer;
 };
 app.initSortable = function () {
-    var isTouched, isMoved, touchStartY, touchesDiff, sortingEl, sortingElHeight, sortingItems, minTop, maxTop, insertAfter, insertBefore, sortableContainer;
+    var isTouched, isMoved, touchStartY, touchesDiff, sortingEl, sortingElHeight, sortingItems, minTop, maxTop, insertAfter, insertBefore, sortableContainer, startIndex;
     
     function handleTouchStart(e) {
         isMoved = false;
@@ -36,6 +36,7 @@ app.initSortable = function () {
         touchStartY = e.type === 'touchstart' ? e.targetTouches[0].pageY : e.pageY;
         /*jshint validthis:true */
         sortingEl = $(this).parent();
+        startIndex = sortingEl.index();
         sortingItems = sortingEl.parent().find('li');
         sortableContainer = sortingEl.parents('.sortable');
         e.preventDefault();
@@ -100,11 +101,11 @@ app.initSortable = function () {
         var virtualList, oldIndex, newIndex;
         if (insertAfter) {
             sortingEl.insertAfter(insertAfter);
-            sortingEl.trigger('sort');
+            sortingEl.trigger('sort sortable:sort', {startIndex: startIndex, newIndex: sortingEl.index()});
         }
         if (insertBefore) {
             sortingEl.insertBefore(insertBefore);
-            sortingEl.trigger('sort');
+            sortingEl.trigger('sort sortable:sort', {startIndex: startIndex, newIndex: sortingEl.index()});
         }
         if ((insertAfter || insertBefore) && sortableContainer.hasClass('virtual-list')) {
             virtualList = sortableContainer[0].f7VirtualList;
@@ -125,5 +126,4 @@ app.initSortable = function () {
         $(document).on(app.touchEvents.move, handleTouchMove);
         $(document).on(app.touchEvents.end, handleTouchEnd);
     }
-        
 };

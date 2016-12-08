@@ -4,7 +4,7 @@
 // On Navbar Init Callback
 app.navbarInitCallback = function (view, pageContainer, navbarContainer, navbarInnerContainer) {
     if (!navbarContainer && navbarInnerContainer) navbarContainer = $(navbarInnerContainer).parent('.navbar')[0];
-    if (navbarInnerContainer.f7NavbarInitialized && view && !view.params.domCache) return;
+    if (!navbarInnerContainer || navbarInnerContainer.f7NavbarInitialized && view && !view.params.domCache) return;
     var navbarData = {
         container: navbarContainer,
         innerContainer: navbarInnerContainer
@@ -24,20 +24,20 @@ app.navbarInitCallback = function (view, pageContainer, navbarContainer, navbarI
         app.pluginHook('navbarReinit', eventData);
 
         // Event
-        $(navbarInnerContainer).trigger('navbarReinit', eventData);
+        $(navbarInnerContainer).trigger('navbarReinit navbar:reinit', eventData);
         return;
     }
     navbarInnerContainer.f7NavbarInitialized = true;
     // Before Init
     app.pluginHook('navbarBeforeInit', navbarData, pageData);
-    $(navbarInnerContainer).trigger('navbarBeforeInit', eventData);
+    $(navbarInnerContainer).trigger('navbarBeforeInit navbar:beforeinit', eventData);
 
     // Initialize Navbar
     app.initNavbar(navbarContainer, navbarInnerContainer);
 
     // On init
     app.pluginHook('navbarInit', navbarData, pageData);
-    $(navbarInnerContainer).trigger('navbarInit', eventData);
+    $(navbarInnerContainer).trigger('navbarInit navbar:init', eventData);
 };
 // Navbar Remove Callback
 app.navbarRemoveCallback = function (view, pageContainer, navbarContainer, navbarInnerContainer) {
@@ -46,14 +46,19 @@ app.navbarRemoveCallback = function (view, pageContainer, navbarContainer, navba
         container: navbarContainer,
         innerContainer: navbarInnerContainer
     };
-    var pageData = pageContainer.f7PageData;
+    var pageData;
+    if (pageContainer) {
+        pageData = pageContainer.f7PageData;
+    }
 
     var eventData = {
         page: pageData,
         navbar: navbarData
     };
     app.pluginHook('navbarBeforeRemove', navbarData, pageData);
-    $(navbarInnerContainer).trigger('navbarBeforeRemove', eventData);
+    $(navbarInnerContainer).trigger('navbarBeforeRemove navbar:beforeremove', eventData);
+    navbarData = null;
+    pageData = null;
 };
 app.initNavbar = function (navbarContainer, navbarInnerContainer) {
     // Init Subnavbar Searchbar
